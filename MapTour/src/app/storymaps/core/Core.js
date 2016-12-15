@@ -96,7 +96,8 @@ define(["esri/map",
 			var urlParams = Helper.getUrlParams(), 
 				isInBuilderMode = false,
 				isDirectCreation = false,
-				isGalleryCreation = false;
+				isGalleryCreation = false,
+				sharingHostParam = Helper.getSharingHost();
 			 
 			console.log("maptour.core.Core - init", builder);
 			
@@ -167,10 +168,25 @@ define(["esri/map",
 			if ( ! _mainView.init(this) )
 				return;
 			
+			// Automatic login in development mode
+			// To remove for release
+			if ( !isProd() ) {
+				on(IdentityManager, 'dialog-create', function(){
+					on(IdentityManager.dialog, 'show', function(){
+						IdentityManager.dialog.txtUser_.set('value', 'mjdemo');
+						IdentityManager.dialog.txtPwd_.set('value', 'demomj');
+						IdentityManager.dialog.btnSubmit_.onClick();
+					});
+				});
+			}
+			
 			startLoadingTimeout();
 
 			// Sharing URL
-			if ( ! configOptions.sharingurl ) {
+			if (sharingHostParam) {
+				configOptions.sharingurl = sharingHostParam;
+			}
+			else if ( ! configOptions.sharingurl ) {
 				// Determine if hosted or on a Portal 
 				var appLocation = document.location.pathname.indexOf("/apps/");
 				if( appLocation == -1 )

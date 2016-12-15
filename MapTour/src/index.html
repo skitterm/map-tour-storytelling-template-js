@@ -65,12 +65,13 @@
 			};
 			// Optionally sharing and proxy URLs can be configured in app/maptour-config.js. This is only required  
 			//  when the webmap is not hosted on ArcGIS Online or a Portal for ArcGIS instance and the template isn't deployed as /home/MapTour/ or /apps/MapTour/. 
+			//  If the template is deployed on a web server that is not a Portal, do NOT use /apps/ or /home/ in the URL.
 			// Optionally Bing Maps key, Geometry and Geocode service's URLs can be configured in app/maptour-config.js. This is only required
 			//  if the Organization or Portal for ArcGIS instance default configuration has to be overwritten.
 		</script>
 
 		<script type="text/javascript">
-			var version = '2.5.2';
+			var version = '2.6.0';
 			var isProduction = false;
 
 			function loadJS(url, isExternal)
@@ -80,7 +81,11 @@
 				else
 					url += '?v=' + version + (!isProduction ? '&_=' + new Date().getTime() : '');
 					
-				document.write("<script language='javascript' type='text/javascript' src='" + url + "'><\/script>");
+				var ref = window.document.getElementsByTagName('script')[0];
+				var script = window.document.createElement('script');
+				script.src = url;
+				script.async = false;
+				ref.parentNode.insertBefore(script, ref);
 			}
 
 			function loadCSS(url, isExternal)
@@ -97,8 +102,8 @@
 				document.getElementsByTagName("head")[0].appendChild(el);
 			}
 
-			loadCSS("//js.arcgis.com/3.18/esri/css/esri.css", true);
-			loadCSS("//js.arcgis.com/3.18/dijit/themes/claro/claro.css", true);			
+			loadCSS("//js.arcgis.com/3.19/esri/css/esri.css", true);
+			loadCSS("//js.arcgis.com/3.19/dijit/themes/claro/claro.css", true);			
 
 			if( isProduction ) {
 				loadCSS("app/maptour-min.css");
@@ -1140,7 +1145,7 @@
 		</div>
 		
 		<script type="text/javascript">
-			loadJS('//js.arcgis.com/3.18/init.js', true);
+			loadJS('//js.arcgis.com/3.19/init.js', true);
 			loadJS('app/maptour-config.js');
 			
 			function getUrlVar(name)
@@ -1159,6 +1164,7 @@
 			}
 			
 			if( isProduction ) {
+				loadJS('app/main-app.js');
 				if( getUrlVar('edit') || getUrlVar('fromScratch') || getUrlVar('fromscratch') || getUrlVar('fromGallery') )
 					loadJS('app/maptour-builder-min.js');
 				else
@@ -1181,6 +1187,7 @@
 				loadJS('lib/bootstrap.file-input.js');
 				loadJS('lib/colorbox/jquery.colorbox-min.js');
 				loadJS('lib/bootstrap-slider/js/bootstrap-slider.js');
+				loadJS('app/main-app.js');
 			}
 		</script>
 		
@@ -1197,53 +1204,6 @@
 					var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 				})();
 			}
-		</script>
-		
-		<script type="text/javascript">
-			var loadingIndicator = {};
-			var i18n = null;
-			
-			if (document.location.protocol == "file:") {
-				$(document).ready(function() {
-					$("#fatalError .error-title").html("Application loading failed");
-					$("#fatalError .error-msg").html("The application has to be accessed through a web server. Consult user guide for detail.");
-					$("#fatalError").show();
-				});
-			}
-			else {
-			 	dojo.addOnLoad(function() {
-					require([
-							"dojo/i18n!./resources/nls/template.js?v=" + version, 
-							"storymaps/ui/loadingIndicator/LoadingIndicator", 
-							"esri/urlUtils", 
-							"dojo/domReady!", 
-							"dojo/ready"
-						], function(
-							_i18n, 
-							LoadingIndicator, 
-							urlUtils
-						){
-							i18n = _i18n;
-							loadingIndicator = new LoadingIndicator("", "loadingMessage");
-							loadingIndicator.setMessage(i18n.viewer.loading.step1);
-							
-						 	require(["storymaps/core/Core", "storymaps/maptour/core/MainView", "storymaps/utils/Helper"], function(Core, MainView, Helper){
-						 		var urlParams = Helper.getUrlParams();
-						 		var isInBuilderMode = urlParams.edit != null || urlParams.fromScratch != null || urlParams.fromscratch != null || urlParams.fromGallery != null;
-								
-						 		if (isInBuilderMode) {
-						 			require(["storymaps/builder/Builder", "storymaps/maptour/builder/BuilderView"], function(Builder, BuilderView) {
-						 				Core.init(new MainView(), Builder);
-						 				Builder.init(Core, new BuilderView());
-						 			});
-						 		}
-						 		else
-						 			Core.init(new MainView());
-						 	});
-				 		}
-					);
-				});
-			 }
 		</script>
 	</body>
 </html>
